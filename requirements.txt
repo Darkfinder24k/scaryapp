@@ -2,3 +2,4 @@ streamlit
 geocoder
 Pillow
 pyautogui
+streamlit-autorefresh
