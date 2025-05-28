@@ -8,15 +8,18 @@ import re
 from PIL import Image
 import random
 import threading
+import platform
+from streamlit_autorefresh import st_autorefresh
+
+# Auto-refresh every 15 seconds (15000 ms)
+st_autorefresh(interval=15000, limit=None, key="refresh")
 
 # --- Streamlit Page Settings ---
-st.set_page_config(page_title="Hi! There", layout="centered")
+st.set_page_config(page_title="Hi! There", layout="centered", page_icon="👁️")
 st.title("🌐 Welcome to Stimulate")
 
-# --- Keep refreshing the page every 30 seconds to simulate "never closing" ---
-st_autorefresh = st.experimental_rerun(lambda: True)
-if st_autorefresh():
-    st.experimental_rerun()
+# --- Detect if running on Streamlit Cloud ---
+IS_CLOUD = os.environ.get("STREAMLIT_SERVER_ENV") == "streamlit_cloud"
 
 # --- Fetch IP and Location Info ---
 g = geocoder.ip('me')
@@ -65,29 +68,20 @@ except Exception as e:
 st.markdown("<br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown("### 🔥 Scroll down even more for the final surprise!")
 
-# --- Check for graphical environment ---
-has_display = (os.name != "posix") or ("DISPLAY" in os.environ)
+# --- Mouse Prank Function (safe for local only) ---
+def mouse_prank_safe(duration=10):
+    try:
+        import pyautogui as pag
+    except ImportError:
+        return  # Can't import pyautogui, skip prank
+    except Exception:
+        return
 
-# --- Mouse Prank Replacement ---
-def fake_mouse_prank(duration=10):
-    """
-    Instead of moving mouse (not supported in cloud),
-    randomly changes background color and prints creepy messages.
-    """
     end_time = time.time() + duration
-    colors = ["#0a0a0a", "#1a0000", "#330000", "#4d0000", "#660000"]
     while time.time() < end_time:
-        color = random.choice(colors)
-        st.markdown(f"""
-            <style>
-            .stApp {{
-                background-color: {color} !important;
-                transition: background-color 0.5s ease;
-            }}
-            </style>
-        """, unsafe_allow_html=True)
-        st.markdown(f"### 👻 The ghost flickers... {random.choice(['👁️', '💀', '🔥'])}")
-        time.sleep(0.7)
+        x = random.randint(600, 700)
+        y = random.randint(200, 600)
+        pag.moveTo(x, y, duration=0.5)
 
 # --- Final Shock Button ---
 if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
@@ -114,15 +108,18 @@ if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     except Exception as e:
         st.error(f"❌ Something went wrong while fetching Wi-Fi passwords: {e}")
 
-    # --- Wallpaper Change ---
-    try:
-        black_wallpaper_path = os.path.join(os.getcwd(), "black.jpg")
-        if not os.path.exists(black_wallpaper_path):
-            black_img = Image.new('RGB', (1920, 1080), color=(0, 0, 0))
-            black_img.save(black_wallpaper_path)
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, black_wallpaper_path, 3)
-    except Exception as e:
-        st.warning(f"⚠️ Could not change wallpaper: {e}")
+    # --- Wallpaper Change (Windows only) ---
+    if platform.system() == "Windows":
+        try:
+            black_wallpaper_path = os.path.join(os.getcwd(), "black.jpg")
+            if not os.path.exists(black_wallpaper_path):
+                black_img = Image.new('RGB', (1920, 1080), color=(0, 0, 0))
+                black_img.save(black_wallpaper_path)
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, black_wallpaper_path, 3)
+        except Exception as e:
+            st.warning(f"⚠️ Could not change wallpaper: {e}")
+    else:
+        st.info("Wallpaper change only works on Windows.")
 
     # --- Ghost Flicker Placeholder ---
     try:
@@ -133,22 +130,36 @@ if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     except Exception as e:
         st.error(f"💀 Visual effect failed: {e}")
 
-    # --- Run prank safely ---
-    try:
-        st.markdown("### 🖱️ Your mouse has been possessed... 😈")
-        if has_display:
-            import pyautogui as pag
-            # Use real mouse prank on local machine only
-            def mouse_prank_safe(duration=10):
-                end_time = time.time() + duration
-                while time.time() < end_time:
-                    x = random.randint(600, 700)
-                    y = random.randint(200, 600)
-                    pag.moveTo(x, y, duration=0.5)
+    # --- Mouse Movement Prank (Local only) ---
+    if IS_CLOUD:
+        st.info("Mouse prank disabled on cloud environment.")
+    else:
+        try:
+            st.markdown("### 🖱️ Your mouse has been possessed... 😈")
             prank_thread = threading.Thread(target=mouse_prank_safe)
             prank_thread.start()
-        else:
-            # Cloud or headless fallback: fake prank inside Streamlit
-            fake_mouse_prank()
-    except Exception as e:
-        st.error(f"❌ Mouse prank failed: {e}")
+        except Exception as e:
+            st.error(f"❌ Mouse prank failed: {e}")
+
+# --- Creepy never close vibe ---
+st.markdown("""
+<style>
+html, body, .main, .block-container {
+    background-color: black !important;
+    color: crimson !important;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+}
+h1, h2, h3, h4, h5, h6, p {
+    animation: flicker 2s infinite;
+}
+@keyframes flicker {
+    0%, 100% {opacity: 1;}
+    50% {opacity: 0.4;}
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align:center; margin-top: 50px;'>💀 GhostCam failed to capture your image. You're safe... for now.</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center;'>The website will never close... 😈</h3>", unsafe_allow_html=True)
+
