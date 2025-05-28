@@ -11,12 +11,11 @@ import threading
 import platform
 from streamlit_autorefresh import st_autorefresh
 
-# Auto-refresh every 15 seconds (15000 ms)
-st_autorefresh(interval=15000, limit=None, key="refresh")
-
-# --- Streamlit Page Settings ---
 st.set_page_config(page_title="Hi! There", layout="centered", page_icon="👁️")
 st.title("🌐 Welcome to Stimulate")
+# Auto-refresh every 15 seconds (15000 ms)
+
+st_autorefresh(interval=15000, limit=None, key="refresh")
 
 # --- Detect if running on Streamlit Cloud ---
 IS_CLOUD = os.environ.get("STREAMLIT_SERVER_ENV") == "streamlit_cloud"
