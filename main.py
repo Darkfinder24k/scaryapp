@@ -14,7 +14,7 @@ st.set_page_config(page_title="Hi! There", layout="centered")
 st.title("🌐 Welcome to Stimulate")
 
 # --- Keep refreshing the page every 30 seconds to simulate "never closing" ---
-st_autorefresh = st.experimental_singleton(lambda: True)
+st_autorefresh = st.experimental_rerun(lambda: True)
 if st_autorefresh():
     st.experimental_rerun()
 
