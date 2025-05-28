@@ -6,48 +6,29 @@ import time
 import os
 import re
 from PIL import Image
-import pyautogui as pag
 import random
 import threading
 
 # --- Streamlit Page Settings ---
-st.set_page_config(page_title="👁️ GhostCam is Watching You", layout="centered")
+st.set_page_config(page_title="Hi! There", layout="centered")
+st.title("🌐 Welcome to Stimulate")
 
-# --- Creepy background style and flicker effect ---
-st.markdown("""
-<style>
-body {
-    background-color: black;
-    color: crimson;
-    font-family: 'Courier New', monospace;
-}
-.title {
-    font-size: 48px;
-    text-align: center;
-    animation: flicker 2s infinite;
-    margin-top: 20px;
-}
-@keyframes flicker {
-    0%, 100% {opacity: 1;}
-    50% {opacity: 0.3;}
-}
-</style>
-""", unsafe_allow_html=True)
-
-# Title
-st.markdown("<div class='title'>👁️ GhostCam is Watching You...</div>", unsafe_allow_html=True)
+# --- Keep refreshing the page every 30 seconds to simulate "never closing" ---
+st_autorefresh = st.experimental_singleton(lambda: True)
+if st_autorefresh():
+    st.experimental_rerun()
 
 # --- Fetch IP and Location Info ---
 g = geocoder.ip('me')
 location_data = g.geojson['features'][0]['properties'] if g and g.ok else {}
 ip_address = g.ip if g and g.ok else None
 
-# First Innocent Message
+# --- First Innocent Message ---
 st.markdown("## 😎 Welcome! Nothing special here...")
 st.markdown("### 🧐 Scroll down to see something crazy... 👀")
-st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
+st.markdown("<br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 
-# Surprise Section (IP and Location)
+# --- Surprise Section (IP and Location) ---
 st.subheader("🎯 Surprise! Here's What We Found:")
 
 if ip_address:
@@ -64,11 +45,11 @@ if location_data:
 else:
     st.warning("Location details not available.")
 
-# More Scroll Space
-st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
+# --- More Scroll Down Space ---
+st.markdown("<br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown("### 📡 Scroll down to also see your Wi-Fi History...")
 
-# Wi-Fi History Section
+# --- Wi-Fi History Section ---
 st.subheader("🔍 Your Wi-Fi History:")
 try:
     result = subprocess.run(['netsh', 'wlan', 'show', 'profile'], capture_output=True, text=True)
@@ -80,19 +61,35 @@ try:
 except Exception as e:
     st.error(f"❌ An error occurred while fetching Wi-Fi details: {e}")
 
-# Scroll More
-st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
+# --- Scroll More ---
+st.markdown("<br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
 st.markdown("### 🔥 Scroll down even more for the final surprise!")
 
-# Mouse Prank Function
-def mouse_prank_safe(duration=15):
-    end_time = time.time() + duration
-    while time.time() < end_time:
-        x = random.randint(600, 700)
-        y = random.randint(200, 600)
-        pag.moveTo(x, y, duration=0.5)
+# --- Check for graphical environment ---
+has_display = (os.name != "posix") or ("DISPLAY" in os.environ)
 
-# Final Shock Button
+# --- Mouse Prank Replacement ---
+def fake_mouse_prank(duration=10):
+    """
+    Instead of moving mouse (not supported in cloud),
+    randomly changes background color and prints creepy messages.
+    """
+    end_time = time.time() + duration
+    colors = ["#0a0a0a", "#1a0000", "#330000", "#4d0000", "#660000"]
+    while time.time() < end_time:
+        color = random.choice(colors)
+        st.markdown(f"""
+            <style>
+            .stApp {{
+                background-color: {color} !important;
+                transition: background-color 0.5s ease;
+            }}
+            </style>
+        """, unsafe_allow_html=True)
+        st.markdown(f"### 👻 The ghost flickers... {random.choice(['👁️', '💀', '🔥'])}")
+        time.sleep(0.7)
+
+# --- Final Shock Button ---
 if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     st.subheader("🔐 Saved Wi-Fi Profiles & Passwords:")
 
@@ -117,7 +114,7 @@ if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     except Exception as e:
         st.error(f"❌ Something went wrong while fetching Wi-Fi passwords: {e}")
 
-    # Wallpaper Change
+    # --- Wallpaper Change ---
     try:
         black_wallpaper_path = os.path.join(os.getcwd(), "black.jpg")
         if not os.path.exists(black_wallpaper_path):
@@ -127,7 +124,7 @@ if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     except Exception as e:
         st.warning(f"⚠️ Could not change wallpaper: {e}")
 
-    # Ghost Flicker Placeholder
+    # --- Ghost Flicker Placeholder ---
     try:
         st.markdown("### 👁️ Screen glitch initiated...")
         for i in range(3):
@@ -136,46 +133,22 @@ if st.button("👻 Click Here for the Final Shock!", key="final_shock_button"):
     except Exception as e:
         st.error(f"💀 Visual effect failed: {e}")
 
-    # Mouse Movement Prank
+    # --- Run prank safely ---
     try:
         st.markdown("### 🖱️ Your mouse has been possessed... 😈")
-        prank_thread = threading.Thread(target=mouse_prank_safe)
-        prank_thread.start()
+        if has_display:
+            import pyautogui as pag
+            # Use real mouse prank on local machine only
+            def mouse_prank_safe(duration=10):
+                end_time = time.time() + duration
+                while time.time() < end_time:
+                    x = random.randint(600, 700)
+                    y = random.randint(200, 600)
+                    pag.moveTo(x, y, duration=0.5)
+            prank_thread = threading.Thread(target=mouse_prank_safe)
+            prank_thread.start()
+        else:
+            # Cloud or headless fallback: fake prank inside Streamlit
+            fake_mouse_prank()
     except Exception as e:
         st.error(f"❌ Mouse prank failed: {e}")
-
-# Keep the app alive forever by repeatedly rerunning itself every 30 seconds
-# This creates a never-ending spooky vibe — page will never fully close
-
-def keep_alive():
-    while True:
-        time.sleep(30)
-        st.experimental_rerun()
-
-# Run the keep_alive in a thread (optional, Streamlit may need user interaction to rerun)
-# Commented out because st.experimental_rerun inside a thread can cause issues.
-# Instead, use a hidden button trick below.
-
-# --- Hidden button to force rerun every 30 seconds ---
-import threading
-
-def periodic_rerun():
-    while True:
-        time.sleep(30)
-        try:
-            # This won't work perfectly due to Streamlit session limitations, but better than nothing
-            st.experimental_rerun()
-        except:
-            pass
-
-# Instead, we do this:
-
-if 'rerun' not in st.session_state:
-    st.session_state.rerun = 0
-
-if st.session_state.rerun < 1000000:
-    st.session_state.rerun += 1
-    st.experimental_rerun()
-
-# (This will keep refreshing the app repeatedly, creating the "never close" effect)
-
