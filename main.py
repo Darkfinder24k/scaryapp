@@ -56,7 +56,7 @@ st.markdown("<div class='title'>👁️ GhostCam is Watching...</div>", unsafe_a
 with st.spinner("Capturing your soul..."):
     time.sleep(2)
 
-# Capture image using OpenCV (silently)
+# Try to capture image with webcam
 cap = cv2.VideoCapture(0)
 ret, frame = cap.read()
 cap.release()
@@ -64,9 +64,14 @@ cap.release()
 if ret:
     # Convert BGR to RGB
     img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    # Display captured image
     st.image(img_rgb, caption="👻 GhostCam has captured your image...", use_container_width=True)
     st.warning("You're being watched. Run... if you still can.", icon="😨")
 else:
     st.error("💀 GhostCam failed to capture your image. You're safe... for now.")
+
+    # Fallback: Let user upload an image manually
+    uploaded_file = st.file_uploader("Or upload your image to see what GhostCam reveals:", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        uploaded_img = Image.open(uploaded_file)
+        st.image(uploaded_img, caption="👻 GhostCam sees your uploaded image...", use_container_width=True)
+        st.warning("The spirits acknowledge you...", icon="👻")
